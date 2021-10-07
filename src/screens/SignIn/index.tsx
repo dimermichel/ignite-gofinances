@@ -1,4 +1,5 @@
-import React from 'react'
+import React from 'react';
+import { Alert } from 'react-native';
 import { 
     Container,
     Header,
@@ -18,8 +19,17 @@ import { useAuth } from '../../hooks/auth';
 
 
 export function SignIn() {
-    const { user } = useAuth();
-    console.log(user);
+    const { signInWithGoogle } = useAuth();
+
+    async function handleSignInWithGoogle() {
+        try {
+            await signInWithGoogle();
+        } catch (error) {
+            console.log(error);
+            Alert.alert('Login error', 'Something went wrong...');
+        }
+    }
+
     return (
         <Container>
             <Header>
@@ -43,6 +53,7 @@ export function SignIn() {
                     <SignInSocialButton 
                         title="Sign in with Google"
                         svg={GoogleSvg}
+                        onPress={handleSignInWithGoogle}
                     />
                     <SignInSocialButton 
                         title="Sign in with Apple"
