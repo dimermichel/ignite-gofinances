@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
     Modal, 
     TouchableWithoutFeedback, 
@@ -8,6 +8,9 @@ import {
 import * as Yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useForm } from 'react-hook-form';
+import uuid from 'react-native-uuid';
+import AsyncStorage from '@react-native-async-storage/async-storage'; 
+import { useNavigation } from '@react-navigation/native';
 import { 
     Container,
     Header,
@@ -44,15 +47,20 @@ export function Register() {
         name: 'Category',
     });
 
+    const navigation = useNavigation();
+
+    const dataKey = '@gofinances:transactions';
+
     const { 
             control, 
             handleSubmit,
+            reset,
             formState: { errors },
         } = useForm({
         resolver: yupResolver(schema)
     });
 
-    function handleTransactionTypeSelect (type: 'up'| 'down') {
+    function handleTransactionTypeSelect (type: 'positive'| 'negative') {
         setTransactionType(type);
     }
     
@@ -64,21 +72,55 @@ export function Register() {
         setCategoryModalOpen(false);
     }
    
-    function handleRegister (form: FormData) {
+    async function handleRegister (form: FormData) {
         if (!transactionType) 
             return Alert.alert('Select a Transaction Type');
         
         if (category.key === 'category') 
             return Alert.alert('Select a Category');
 
-        const data = {
+        const newTransaction = {
+            id: `${uuid.v4()}`,
             name: form.name,
             amount: form.amount,
-            transactionType,
+            type: transactionType,
             category: category.key,
+            date: new Date(),
         };
-        console.log(data);
+
+        try {
+            const data = await AsyncStorage.getItem(dataKey);
+            const currentData = data ? JSON.parse(data) : [];
+            const dataFormatted = [...currentData, newTransaction];
+
+            await AsyncStorage.setItem(dataKey, JSON.stringify(dataFormatted));
+
+            reset();
+            setTransactionType('');
+            setCategory({
+                key: 'category',
+                name: 'Category',
+            });
+
+            navigation.navigate('Dashboard');
+
+        } catch (error) {
+            console.log(error);
+            Alert.alert('Error', 'An error occurred while registering');
+        }
     }
+
+    useEffect(() => {
+        async function loadData () {
+            const data = await AsyncStorage.getItem(dataKey);
+            data && console.log(JSON.parse(data));
+        }
+        loadData();
+        // async function removeAll () {
+        //     await AsyncStorage.removeItem(dataKey);
+        // }
+        // removeAll();
+    }, [])
 
     return (
         <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
@@ -107,16 +149,16 @@ export function Register() {
                         />
                         <TransactionTypes>
                             <TransactionTypeButton
-                                isActive={transactionType === 'up'} 
+                                isActive={transactionType === 'positive'} 
                                 type="up"
                                 title="Income"
-                                onPress={() => handleTransactionTypeSelect('up')}
+                                onPress={() => handleTransactionTypeSelect('positive')}
                             />
                             <TransactionTypeButton
-                                isActive={transactionType === 'down'} 
+                                isActive={transactionType === 'negative'} 
                                 type="down"
                                 title="Outcome"
-                                onPress={() => handleTransactionTypeSelect('down')}
+                                onPress={() => handleTransactionTypeSelect('negative')}
                             />
                         </TransactionTypes>
                         
