@@ -21,6 +21,7 @@ import {
 } from './styles';
 import { HistoryCard } from '../../components/HistoryCard';
 import { categories } from '../../utils/categories';
+import { useAuth } from '../../hooks/auth';
 
 
 interface TransactionData {
@@ -41,13 +42,14 @@ interface CategoryData {
 }
 
 export function Resume(){
+    const { user } = useAuth();
     const [isLoading, setIsLoading] = useState(false);
     const [selectedDate, setSelectedDate] = useState(new Date());
     const [totalByCategories, setTotalByCategories] = useState<CategoryData[]>([]);
 
     const theme = useTheme();
 
-    const dataKey = '@gofinances:transactions';
+    const dataKey = `@gofinances:transactions_user:${user.id}`;
 
     function handleDateChange(action: 'next' | 'prev'){
         if (action === 'next'){

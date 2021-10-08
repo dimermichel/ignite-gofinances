@@ -24,6 +24,7 @@ import { Button } from '../../components/Form/Button';
 import { CategorySelectButton } from '../../components/Form/CategorySelectButton';
 import { TransactionTypeButton } from '../../components/Form/TransactionTypeButton';
 import { CategorySelect } from '../CategorySelect';
+import { useAuth } from '../../hooks/auth';
 
 interface FormData {
     name: string;
@@ -40,6 +41,7 @@ const schema = Yup.object().shape({
 });
 
 export function Register() {
+    const { user } = useAuth();
     const [transactionType, setTransactionType] = useState('');
     const [categoryModalOpen, setCategoryModalOpen] = useState(false);
     const [category, setCategory] = useState({
@@ -49,7 +51,7 @@ export function Register() {
 
     const navigation = useNavigation();
 
-    const dataKey = '@gofinances:transactions';
+    const dataKey = `@gofinances:transactions_user:${user.id}`;
 
     const { 
             control, 
@@ -105,7 +107,7 @@ export function Register() {
             navigation.navigate('Dashboard');
 
         } catch (error) {
-            console.log(error);
+            console.log(error, 'error');
             Alert.alert('Error', 'An error occurred while registering');
         }
     }
